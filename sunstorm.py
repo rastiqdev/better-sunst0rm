@@ -9,41 +9,6 @@ import shutil
 
 # os.chdir(os.path.dirname(sys.argv[0]))
 
-
-def dependencies():
-    if not os.path.exists('/usr/local/bin/futurerestore'):
-        print('[!] futurerestore not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/img4tool'):
-        print('[!] img4tool not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/img4'):
-        print('[!] img4 not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/Kernel64Patcher'):
-        print('[!] Kernel64Patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/iBoot64Patcher'):
-        print('[!] iBoot64Patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/ldid'):
-        print('[!] ldid not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/asr64_patcher'):
-        print('[!] asr64_patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/restored_external64_patcher'):
-        print('[!] restored_external64_patcher not found, please install it')
-        sys.exit(1)
-
-
 def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
     # getting lowercase board to avoid errors
     board = board.lower()
@@ -72,7 +37,7 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
 
     # extract it using img4
     print('[*] Extracting ramdisk')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/' +
+    subprocess.run(['./bin/img4', '-i', 'work/' +
                    ramdisk_path, '-o', 'work/ramdisk.dmg'])
 
     # mount it using hdiutil
@@ -82,19 +47,19 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
 
     # patch asr into the ramdisk
     print('[*] Patching ASR in the ramdisk')
-    subprocess.run(['/usr/local/bin/asr64_patcher',
+    subprocess.run(['./bin/asr64_patcher',
                    'work/ramdisk/usr/sbin/asr', 'work/patched_asr'])
 
-    # extract the ents and save it to work/asr_ents.plist like:     subprocess.run(['/usr/local/bin/ldid', '-e', 'work/ramdisk/usr/sbin/asr', '>', 'work/asr.plist'])
+    # extract the ents and save it to work/asr_ents.plist like:     subprocess.run(['./bin/ldid', '-e', 'work/ramdisk/usr/sbin/asr', '>', 'work/asr.plist'])
     print('[*] Extracting ASR entitlements')
     with open('work/asr.plist', 'wb') as f:
-        subprocess.run(['/usr/local/bin/ldid', '-e',
+        subprocess.run(['./bin/ldid', '-e',
                        'work/ramdisk/usr/sbin/asr'], stdout=f)
 
     # resign it using ldid
     print('[*] Resigning ASR')
     subprocess.run(
-        ['/usr/local/bin/ldid', '-Swork/asr.plist', 'work/patched_asr'])
+        ['./bin/ldid', '-Swork/asr.plist', 'work/patched_asr'])
 
     # chmod 755 the new asr
     print('[*] Chmoding ASR')
@@ -108,18 +73,18 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
     if not legacy:
         # patch restored_external
         print('[*] Patching restored_external')
-        subprocess.run(['/usr/local/bin/restored_external64_patcher',
-                       'work/ramdisk/usr/local/bin/restored_external', 'work/restored_external_patched'])
+        subprocess.run(['./bin/restored_external64_patcher',
+                       'work/ramdisk./bin/restored_external', 'work/restored_external_patched'])
 
         # resign it using ldid
         print('[*] Extracting restored_external Ents')
         with open('work/restored_external.plist', 'wb') as f:
-            subprocess.run(['/usr/local/bin/ldid', '-e',
-                           'work/ramdisk/usr/local/bin/restored_external'], stdout=f)
+            subprocess.run(['./bin/ldid', '-e',
+                           'work/ramdisk./bin/restored_external'], stdout=f)
 
         # resign it using ldid
         print('[*] Resigning restored_external')
-        subprocess.run(['/usr/local/bin/ldid', '-Swork/restored_external.plist',
+        subprocess.run(['./bin/ldid', '-Swork/restored_external.plist',
                        'work/restored_external_patched'])
 
         # chmod 755 the new restored_external
@@ -130,7 +95,7 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
         # copy the patched restored_external back to the ramdisk
         print('[*] Copying patched restored_external back to the ramdisk')
         subprocess.run(['/bin/cp', 'work/restored_external_patched',
-                       'work/ramdisk/usr/local/bin/restored_external'])
+                       'work/ramdisk./bin/restored_external'])
     else:
         print('[*] Legacy mode, skipping restored_external')
 
@@ -157,7 +122,7 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
 
     # patch the kernel using kernel64patcher like this: Kernel64Patcher kcache.raw krnl.patched -f -a
     print('[*] Patching kernel')
-    subprocess.run(['/usr/local/bin/kernel64patcher',
+    subprocess.run(['./bin/kernel64patcher',
                    'work/kcache.raw', 'work/krnl.patched', '-f', '-a'])
 
     # rebuild the kernel like this: pyimg4 im4p create -i krnl.patched -o krnl.im4p --extra kpp.bin -f rkrn --lzss (leave out --extra kpp.bin if you dont have kpp)
@@ -180,10 +145,10 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
             # restore the device using futurestore like this: futurerestore -t blob --use-pwndfu --skip-blob --rdsk ramdisk.im4p --rkrn krnl.im4p --latest-sep --latest-baseband ipsw.ipsw
             print('[*] Restoring Device')
             if skip_baseband:
-                subprocess.run(['/usr/local/bin/futurerestore', '-t', blob, '--use-pwndfu', '--skip-blob', '--rdsk',
+                subprocess.run(['./bin/futurerestore', '-t', blob, '--use-pwndfu', '--skip-blob', '--rdsk',
                                'work/ramdisk.im4p', '--rkrn', 'work/krnl.im4p', '--latest-sep', '--no-baseband', ipsw])
             else:
-                subprocess.run(['/usr/local/bin/futurerestore', '-t', blob, '--use-pwndfu', '--skip-blob', '--rdsk',
+                subprocess.run(['./bin/futurerestore', '-t', blob, '--use-pwndfu', '--skip-blob', '--rdsk',
                                'work/ramdisk.im4p', '--rkrn', 'work/krnl.im4p', '--latest-sep', '--latest-baseband', ipsw])
             # exit
             print('[*] Done!')
@@ -244,36 +209,36 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
 
     # decrypt ibss like this:  img4 -i ibss -o ibss.dmg -k ivkey
     print('[*] Decrypting IBSS')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/' + ibss,
+    subprocess.run(['./bin/img4', '-i', 'work/' + ibss,
                    '-o', 'work/ibss.dmg', '-k', ibss_iv + ibss_key])
 
     # decrypt ibec like this:  img4 -i ibec -o ibec.dmg -k ivkey
     print('[*] Decrypting IBEC')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/' + ibec,
+    subprocess.run(['./bin/img4', '-i', 'work/' + ibec,
                    '-o', 'work/ibec.dmg', '-k', ibec_iv + ibec_key])
 
     # patch ibss like this:  iBoot64Patcher ibss.dmg ibss.patched
     print('[*] Patching IBSS')
-    subprocess.run(['/usr/local/bin/iBoot64Patcher',
+    subprocess.run(['./bin/iBoot64Patcher',
                    'work/ibss.dmg', 'work/ibss.patched'])
 
     # patch ibec like this:  iBoot64Patcher ibec.dmg ibec.patched -b "-v"
     print('[*] Patching IBEC')
-    subprocess.run(['/usr/local/bin/iBoot64Patcher',
+    subprocess.run(['./bin/iBoot64Patcher',
                    'work/ibec.dmg', 'work/ibec.patched', '-b', '-v'])
 
     # convert blob into im4m like this: img4tool -e -s blob -m IM4M
     print('[*] Converting BLOB to IM4M')
-    subprocess.run(['/usr/local/bin/img4tool', '-e', '-s', blob, '-m', 'IM4M'])
+    subprocess.run(['./bin/img4tool', '-e', '-s', blob, '-m', 'IM4M'])
 
     # convert ibss into img4 like this:  img4 -i ibss.patched -o ibss.img4 -M IM4M -A -T ibss
     print('[*] Converting IBSS to IMG4')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/ibss.patched',
+    subprocess.run(['./bin/img4', '-i', 'work/ibss.patched',
                    '-o', 'work/ibss.img4', '-M', 'IM4M', '-A', '-T', 'ibss'])
 
     # convert ibec into img4 like this:  img4 -i ibec.patched -o ibec.img4 -M IM4M -A -T ibec
     print('[*] Converting IBEC to IMG4')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/ibec.patched',
+    subprocess.run(['./bin/img4', '-i', 'work/ibec.patched',
                    '-o', 'work/ibec.img4', '-M', 'IM4M', '-A', '-T', 'ibec'])
 
     # get the names of the devicetree and trustcache
@@ -287,13 +252,13 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
 
     # sign them like this  img4 -i devicetree -o devicetree.img4 -M IM4M -T rdtr
     print('[*] Signing DeviceTree')
-    subprocess.run(['/usr/local/bin/img4', '-i', 'work/' + devicetree,
+    subprocess.run(['./bin/img4', '-i', 'work/' + devicetree,
                    '-o', 'work/devicetree.img4', '-M', 'IM4M', '-T', 'rdtr'])
 
     # sign them like this   img4 -i trustcache -o trustcache.img4 -M IM4M -T rtsc
     print('[*] Signing TrustCache')
     if not legacy:
-        subprocess.run(['/usr/local/bin/img4', '-i', 'work/' + trustcache,
+        subprocess.run(['./bin/img4', '-i', 'work/' + trustcache,
                        '-o', 'work/trustcache.img4', '-M', 'IM4M', '-T', 'rtsc'])
 
     # grab kernelcache from manifest
@@ -311,7 +276,7 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
 
     # patch it like this:   Kernel64Patcher kcache.raw krnlboot.patched -f
     print('[*] Patching kernel')
-    subprocess.run(['/usr/local/bin/Kernel64Patcher',
+    subprocess.run(['./bin/Kernel64Patcher',
                    'work/kcache.raw', 'work/krnlboot.patched', '-f'])
 
     # convert it like this:   pyimg4 im4p create -i krnlboot.patched -o krnlboot.im4p --extra kpp.bin -f rkrn --lzss
@@ -328,7 +293,7 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
     subprocess.run([sys.executable, '-m', 'pyimg4', 'img4', 'create', '-p',
                    'work/krnlboot.im4p', '-o', 'work/krnlboot.img4', '-m', 'IM4M'])
 
-    subprocess.run(['/usr/local/bin/img4', '-i', 'other/bootlogo.im4p',
+    subprocess.run(['./bin/img4', '-i', 'other/bootlogo.im4p',
                    '-o', 'work/bootlogo.img4', '-m', 'IM4M', '-A', '-T', 'rlgo'])
 
     print('[*] Creating boot directory')
@@ -372,8 +337,6 @@ def main():
     parser.add_argument('--skip-baseband', help='Skip Baseband',
                         required=False, action='store_true')
     args = parser.parse_args()
-
-    dependencies()
 
     if args.restore:
         prep_restore(args.ipsw, args.blob, args.boardconfig,
