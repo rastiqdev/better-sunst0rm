@@ -1,3 +1,5 @@
 requests
 remotezip
 pyimg4
+datetime
+wikitextparser

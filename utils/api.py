@@ -1,9 +1,9 @@
-import requests
+import wiki
 from remotezip import RemoteZip
 
 def get_keys(identifier, board, buildid):
 	try:
-		f = requests.get(f"https://api.m1sta.xyz/wikiproxy/{identifier}/{board}/{buildid}").json()
+		f = wiki.get_firmware_keys(identifier, board, buildid)
 	except Exception:
 		if input(f"[?] Keys not found for this IPSW ({buildid}) for the board {board}. Do you want to enter keys manually? (y/n) ") == "y":
 			iBSS_iv = input("  - Enter the iBSS IV: ")
@@ -14,17 +14,16 @@ def get_keys(identifier, board, buildid):
 		else:
 			exit()
 		print("Requesting keys...")
-	for dev in f['keys']:
-		if dev['image'] == "iBSS":
-			iBSS_iv = dev['iv']
-			iBSS_key = dev['key']
-		if dev['image'] == "iBEC":
-			iBEC_iv = dev['iv']
-			iBEC_key = dev['key']
+	
+	iBSS_iv = f['iBSSIV']
+	iBSS_key = f['iBSSKey']
+	iBEC_iv = f['iBECIV']
+	iBEC_key = f['iBECKey']
+
 	try:
 		return iBSS_iv, iBSS_key, iBEC_iv, iBEC_key
 	except UnboundLocalError:
-		print("[WARNING] Unable to get firmware keys, either the bootchain is not encrypted or the wikiproxy does not have it.")
+		print("[WARNING] Unable to get firmware keys, either the bootchain is not encrypted or theapplewiki.com does not have it.")
 		input("Continue or not? (Press ENTER to continue, Ctrl-C to quit)")
 
 def partialzip_download(url, file, dest):
