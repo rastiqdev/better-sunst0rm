@@ -301,7 +301,7 @@ sleep 5
 
 cp work/ramdisk/usr/local/bin/restored_external work/restored_external
 ./bin/restored_external64_patcher work/restored_external work/patched_restored_external
-./binldid -e work/restored_external >work/restored_external.plist
+./bin/ldid -e work/restored_external >work/restored_external.plist
 ./bin/ldid -Swork/restored_external.plist work/patched_restored_external
 
 chmod 755 work/patched_restored_external
