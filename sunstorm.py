@@ -74,13 +74,13 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
         # patch restored_external
         print('[*] Patching restored_external')
         subprocess.run(['./bin/restored_external64_patcher',
-                       'work/ramdisk./bin/restored_external', 'work/restored_external_patched'])
+                       'work/ramdisk/usr/local/bin/restored_external', 'work/restored_external_patched'])
 
         # resign it using ldid
         print('[*] Extracting restored_external Ents')
         with open('work/restored_external.plist', 'wb') as f:
             subprocess.run(['./bin/ldid', '-e',
-                           'work/ramdisk./bin/restored_external'], stdout=f)
+                           'work/ramdisk/usr/local/bin/restored_external'], stdout=f)
 
         # resign it using ldid
         print('[*] Resigning restored_external')
@@ -95,7 +95,7 @@ def prep_restore(ipsw, blob, board, kpp, legacy, skip_baseband):
         # copy the patched restored_external back to the ramdisk
         print('[*] Copying patched restored_external back to the ramdisk')
         subprocess.run(['/bin/cp', 'work/restored_external_patched',
-                       'work/ramdisk./bin/restored_external'])
+                       'work/ramdisk/usr/local/bin/restored_external'])
     else:
         print('[*] Legacy mode, skipping restored_external')
 
