@@ -18,25 +18,6 @@ else
   exit 2
 fi
 
-if [ ! "$(command -v futurerestore)" ] && [ ! -e "$HOME/FutureRestoreGUI/extracted/futurerestore" ]; then
-  echo "futurerestore not found. Download at https://github.com/futurerestore/futurerestore"
-  sleep 5
-  open https://github.com/futurerestore/futurerestore
-  exit 1
-elif command -v futurerestore; then
-  futurerestore=$(command -v futurerestore)
-elif [ -e "$HOME/FutureRestoreGUI/.extracted/futurerestore" ]; then
-  futurerestore="$HOME/FutureRestoreGUI/.extracted/futurerestore"
-fi
-
-if [ ! -e "bin/ldid" ] && [ "$(command -v ldid)" != "/opt/procursus/bin/ldid" ]; then
-  echo "please run ./requirements.sh (ldid is missing)"
-elif [ -e ./bin/ldid ]; then
-  ldid="./bin/ldid"
-elif [ "$(command -v ldid)" = "/opt/procursus/bin/ldid" ]; then
-  ldid=/opt/procursus/bin/ldid
-fi
-
 arg2="<ipsw path>"
 
 _usage() {
@@ -170,7 +151,7 @@ EOF
   read -p "Press ENTER to continue <-"
   rm -rf /tmp/futurerestore/
   restore_ipsw=$(cat restore/ipsw)
-  $futurerestore -t tickets/ticket.shsh2 --use-pwndfu --skip-blob \
+  ./bin/futurerestore -t tickets/ticket.shsh2 --use-pwndfu --skip-blob \
     --rdsk restore/rdsk.im4p --rkrn restore/rkrn.im4p \
     --latest-sep --latest-baseband $restore_ipsw
   exit
@@ -261,13 +242,13 @@ if [ -a IM4M ]; then
   rm IM4M
 fi
 
-img4tool -e -s $shsh -m IM4M
+./bin/img4tool -e -s $shsh -m IM4M
 ./bin/gaster decrypt work/$ibss work/ibss.dec
 ./bin/gaster decrypt work/$ibec work/ibec.dec
 ./bin/iBoot64Patcher work/ibss.dec work/ibss.patched
 ./bin/iBoot64Patcher work/ibec.dec work/ibec.patched -b "-v"
-img4 -i work/ibss.patched -o boot/ibss.img4 -M IM4M -A -T ibss
-img4 -i work/ibec.patched -o boot/ibec.img4 -M IM4M -A -T ibec
+./bin/img4 -i work/ibss.patched -o boot/ibss.img4 -M IM4M -A -T ibss
+./bin/img4 -i work/ibec.patched -o boot/ibec.img4 -M IM4M -A -T ibec
 devicetree=$(_extractFromManifest "DeviceTree")
 echo "DeviceTree: $devicetree"
 img4 -i work/$devicetree -o boot/devicetree.img4 -M IM4M -T rdtr
@@ -300,6 +281,7 @@ img4 -i work/$kernelcache -o work/kcache.dec
 pyimg4 im4p create -i work/kcache.patched -o work/kcache.im4p -f rkrn --lzss
 pyimg4 img4 create -p work/kcache.im4p -o boot/kernelcache.img4 -m IM4M
 rm work/kcache.*
+
 echo "Making restore files..."
 ramdisk=$(_extractFromManifest "RestoreRamDisk")
 echo "RestoreRamDisk: $ramdisk"
@@ -312,13 +294,16 @@ img4 -i work/$restore_kernelcache -o work/kcache.dec
 mkdir work/ramdisk
 hdiutil attach work/ramdisk.dmg -mountpoint work/ramdisk
 sleep 5
+
 ./bin/asr64_patcher work/ramdisk/usr/sbin/asr work/patched_asr
-$ldid -e work/ramdisk/usr/sbin/asr >work/asr.plist
-$ldid -Swork/asr.plist work/patched_asr
+./bin/ldid -e work/ramdisk/usr/sbin/asr >work/asr.plist
+./bin/ldid -Swork/asr.plist work/patched_asr
+
 cp work/ramdisk/usr/local/bin/restored_external work/restored_external
 ./bin/restored_external64_patcher work/restored_external work/patched_restored_external
-$ldid -e work/restored_external >work/restored_external.plist
-$ldid -Swork/restored_external.plist work/patched_restored_external
+./binldid -e work/restored_external >work/restored_external.plist
+./bin/ldid -Swork/restored_external.plist work/patched_restored_external
+
 chmod 755 work/patched_restored_external
 chmod 755 work/patched_asr
 rm work/ramdisk/usr/sbin/asr
@@ -327,6 +312,7 @@ mv work/patched_asr work/ramdisk/usr/sbin/asr
 mv work/patched_restored_external work/ramdisk/usr/local/bin/restored_external
 hdiutil detach -force work/ramdisk
 sleep 5
+
 ./bin/Kernel64Patcher work/kcache.dec work/kcache.patched -f -a
 pyimg4 im4p create -i work/ramdisk.dmg -o restore/rdsk.im4p -f rdsk
 pyimg4 im4p create -i work/kcache.patched -o restore/rkrn.im4p -f rkrn --lzss

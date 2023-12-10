@@ -13,11 +13,9 @@ This is only tested on iPhone 7 (d101ap)
 [SEP/BB Compatibility Chart](https://docs.google.com/spreadsheets/d/1Mb1UNm6g3yvdQD67M413GYSaJ4uoNhLgpkc7YKi3LBs/)
 
 Requirements:
-  - Installed Xcode
-  - Installed Xcode Command Line Tools `$ xcode-select --install`
   - Installed [Homebrew](https://brew.sh)
   - Downloaded IPSW (target iOS firmware) which can be found at [ipsw.me](https://ipsw.me)
-  - Installed without brew: `futurerestore` `libirecovery` `Python 3`
+  - Installed without brew: `Python 3`
   <!-- - Installed manually: [libimg4tool](https://github.com/m1stadev/img4tool) -->
 
 Usage:
@@ -49,3 +47,5 @@ Usage:
 [sen0rxol0](https://github.com/sen0rxol0) - all their contributions / pull requests
 
 [mineek](https://github.com/mineek) - sunst0rm
+
+[rastiqdev](https://github.com/rastiqdev) - better-sunst0rm
