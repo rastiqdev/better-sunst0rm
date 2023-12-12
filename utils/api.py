@@ -1,9 +1,9 @@
-import wiki
+import utils.wiki
 from remotezip import RemoteZip
 
 def get_keys(identifier, board, buildid):
 	try:
-		f = wiki.get_firmware_keys(identifier, board, buildid)
+		f = utils.wiki.get_firmware_keys(identifier, board, buildid)
 	except Exception:
 		if input(f"[?] Keys not found for this IPSW ({buildid}) for the board {board}. Do you want to enter keys manually? (y/n) ") == "y":
 			iBSS_iv = input("  - Enter the iBSS IV: ")
