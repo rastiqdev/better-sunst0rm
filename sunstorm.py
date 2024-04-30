@@ -319,6 +319,21 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
 
 
 def main():
+    if os.path.exists('.deps-installed'):
+        print('[*] Doing the last steps to configure your dependencies...')
+        print('[*] Downloading futurerestore...')
+        subprocess.run(['curl', '-sLo', 'futurerestore-macOS-RELEASE.zip', 'https://nightly.link/futurerestore/futurerestore/workflows/ci/main/futurerestore-macOS-RELEASE.zip'])
+        print('[*] Unzipping futurerestore...')
+        subprocess.run(['unzip', 'futurerestore-macOS-RELEASE.zip'])
+        subprocess.run(['tar', 'Jxfv', 'futurerestore-*.xz'])
+        print('[*] Moving futurerestore to the bin folder...')
+        subprocess.run(['mv', 'futurerestore', 'bin/'])
+        subprocess.run(['rm', '-rf', 'futurerestore-*'])
+        print('[*] Adding executable flag to the binaries...')
+        subprocess.run(['chmod', '-R', '+x', 'bin'])
+        with open('.deps-installed', 'wb') as file:
+            file.write('ok')
+        print('[*] Dependencies configuration done! Running better-sunst0rm...')
     parser = argparse.ArgumentParser(description='iOS Tethered IPSW Restore')
     parser.add_argument('-i', '--ipsw', help='IPSW to restore', required=True)
     parser.add_argument('-t', '--blob', help='Blob to use', required=True)
@@ -353,6 +368,6 @@ def main():
 
 
 if __name__ == '__main__':
-    print("sunst0rm")
-    print("Made by mineek | Some code by m1n1exploit\n")
+    print("better-sunst0rm")
+    print("Made by mineek | Some code by m1n1exploit | Improved by rastiqdev\n")
     main()
