@@ -16,9 +16,10 @@ Based on [mineek's guide](https://github.com/mineek/iostethereddowngrade), with 
 
 ## Installation
 
-1. Clone the git repo (`git clone https://github.com/rastiqdev/better-sunst0rm`)
-2. Install the pip requirements (`pip3 install -r requirements.txt`)
-3. Done!!! :)
+1. Install the latest version of Python. (the bundled version of Python in macOS has issues with better-sunst0rm)
+2. Clone the git repo (`git clone https://github.com/rastiqdev/better-sunst0rm`)
+3. Install the pip requirements (`pip3 install -r requirements.txt`)
+4. Done!!! :)
 
 ## How to use?
 | Option (short)  | Option (long)               | Description                              |
