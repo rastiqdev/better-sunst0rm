@@ -319,20 +319,21 @@ def prep_boot(ipsw, blob, board, kpp, identifier, legacy):
 
 
 def main():
-    if os.path.exists('.deps-installed'):
+    if os.path.exists('.deps-installed') == False:
         print('[*] Doing the last steps to configure your dependencies...')
         print('[*] Downloading futurerestore...')
         subprocess.run(['curl', '-sLo', 'futurerestore-macOS-RELEASE.zip', 'https://nightly.link/futurerestore/futurerestore/workflows/ci/main/futurerestore-macOS-RELEASE.zip'])
         print('[*] Unzipping futurerestore...')
         subprocess.run(['unzip', 'futurerestore-macOS-RELEASE.zip'])
-        subprocess.run(['tar', 'Jxfv', 'futurerestore-*.xz'])
+        subprocess.run('tar Jxfv futurerestore-*.xz', shell=True)
         print('[*] Moving futurerestore to the bin folder...')
         subprocess.run(['mv', 'futurerestore', 'bin/'])
-        subprocess.run(['rm', '-rf', 'futurerestore-*'])
+        subprocess.run('rm -rf futurerestore-*', shell=True)
         print('[*] Adding executable flag to the binaries...')
         subprocess.run(['chmod', '-R', '+x', 'bin'])
-        with open('.deps-installed', 'wb') as file:
+        with open('.deps-installed', 'w') as file:
             file.write('ok')
+            file.close()
         print('[*] Dependencies configuration done! Running better-sunst0rm...')
     parser = argparse.ArgumentParser(description='iOS Tethered IPSW Restore')
     parser.add_argument('-i', '--ipsw', help='IPSW to restore', required=True)
